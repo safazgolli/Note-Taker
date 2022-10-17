@@ -1,6 +1,8 @@
 const note = require('express').Router();
 const uuid = require('../helpers/uuid');
-const { readAndAppend, readFromFile } = require('../helpers/fsUtils');
+const { readFromFile, readAndAppend } = require('../helpers/fsUtils');
+const fs = require('fs');
+
 
 // GET Route for retrieving all the notes
 note.get('/', (req, res) =>
@@ -18,7 +20,7 @@ note.post('/', (req, res) => {
     const newNote = {
       title,
       text,
-      note_id: uuid(),
+      id: uuid(),
     };
 
     readAndAppend(newNote, './db/db.json');
@@ -34,17 +36,21 @@ note.post('/', (req, res) => {
   }
 });
 
-// router.delete("/api/notes/:id", async function (req, res) {
-//     // separates note to delete based on id
-//     const noteToDelete = req.params.id;
+note.delete("/:id", async function (req, res) {
+    // separates note to delete based on id
+    let initArray;
+    const noteToDelete = req.params.id;
   
-//     const currentNotes = await DB.readNotes();
-//     // sort notes file, create a new array - the note in question
-//     const newNoteData = currentNotes.filter((note) => note.id !== noteToDelete);
-  
-//     await DB.deleteNote(newNoteData);
-    
-//     return res.send(newNoteData);
-//   });
+    await readFromFile('./db/db.json', 'utf8')
+        .then((data) => initArray = JSON.parse(data))
+  const newArray = initArray.filter((n) => n.id !== noteToDelete);
+  console.log(newArray);
+
+  fs.writeFile('./db/db.json', JSON.stringify(newArray, null, 4), (err) => 
+  err ? console.error(err) : console.info('\nData written to ./db/db.json'))
+
+  return res.send(newArray)
+ 
+  });
 
 module.exports = note;
